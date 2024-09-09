@@ -127,18 +127,16 @@ static void clear_buf(token_t *mem)
             mem[i + j * TOKENS] = (mask | (token_t) (999999));
 }
 
-void p2p_setup(struct esp_device* dev, int p2p_store, int mcast_ndests, int p2p_load, struct esp_device* p2p_src, int mcast_nsrcs){
+void p2p_setup(struct esp_device* dev, int p2p_store, int mcast_ndests, int p2p_load, struct esp_device* p2p_src){
     esp_p2p_reset(dev);
     if (p2p_store) {
         esp_p2p_enable_dst(dev);
         esp_p2p_set_mcast_ndests(dev, mcast_ndests);
-        esp_p2p_set_mcast_nsrcs(dev, mcast_nsrcs);
     }
     if (p2p_load) {
         esp_p2p_enable_src(dev);
         esp_p2p_set_y(dev, 0, esp_get_y(p2p_src));
         esp_p2p_set_x(dev, 0, esp_get_x(p2p_src));
-        esp_p2p_set_mcast_nsrcs(dev, mcast_nsrcs);
     }
 }
 
@@ -215,9 +213,9 @@ int main(int argc, char * argv[])
     //printf("  ptable = %p\n", ptable);
     //printf("  nchunk = %lu\n\n", nchunk);
 
-for (int it_0 = 2; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
-    for (int it_1 = 5; it_1 < NUM_MULTICAST_1 + 1; it_1++) {
-        for (int it_2 = 4; it_2 < NUM_MULTICAST_2 + 1; it_2++) {
+for (int it_0 = 2; it_0 < 3; it_0++) {
+    for (int it_1 = 5; it_1 < 6; it_1++) {
+        for (int it_2 = 4; it_2 < 5; it_2++) {
 //if ((it_0 == 3 && it_1 == 4 && it_2 == 4) || (it_0 == 3 && it_1 == 4 && it_2 == 5) || (it_0 == 3 && it_1 == 5 && it_2 == 5)) {
 //    continue;
 //}
@@ -261,9 +259,9 @@ for (int it_0 = 2; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
         iowrite32(&devs[dev_id_0[i]], SELECT_REG, ioread32(&devs[dev_id_0[i]], DEVID_REG));
         iowrite32(&devs[dev_id_0[i]], COHERENCE_REG, coherence);
         if (i == 0)
-            p2p_setup(&devs[dev_id_0[i]], 1, num_multicast_0, 0, NULL, 0);
+            p2p_setup(&devs[dev_id_0[i]], 1, num_multicast_0, 0, NULL);
         else
-            p2p_setup(&devs[dev_id_0[i]], 0, 0, 1, &devs[dev_id_0[0]], 0);
+            p2p_setup(&devs[dev_id_0[i]], 0, 0, 1, &devs[dev_id_0[0]]);
 
         iowrite32(&devs[dev_id_0[i]], PT_ADDRESS_REG, (unsigned long) ptable);
         iowrite32(&devs[dev_id_0[i]], PT_NCHUNK_REG, nchunk);
@@ -280,9 +278,9 @@ for (int it_0 = 2; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
         iowrite32(&devs[dev_id_1[i]], SELECT_REG, ioread32(&devs[dev_id_1[i]], DEVID_REG));
         iowrite32(&devs[dev_id_1[i]], COHERENCE_REG, coherence);
         if (i == 0)
-            p2p_setup(&devs[dev_id_1[i]], 1, num_multicast_1, 0, NULL, 0);
+            p2p_setup(&devs[dev_id_1[i]], 1, num_multicast_1, 0, NULL);
         else
-            p2p_setup(&devs[dev_id_1[i]], 0, 0, 1, &devs[dev_id_1[0]], 0);
+            p2p_setup(&devs[dev_id_1[i]], 0, 0, 1, &devs[dev_id_1[0]]);
 
         iowrite32(&devs[dev_id_1[i]], PT_ADDRESS_REG, (unsigned long) ptable);
         iowrite32(&devs[dev_id_1[i]], PT_NCHUNK_REG, nchunk);
@@ -299,9 +297,9 @@ for (int it_0 = 2; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
         iowrite32(&devs[dev_id_2[i]], SELECT_REG, ioread32(&devs[dev_id_2[i]], DEVID_REG));
         iowrite32(&devs[dev_id_2[i]], COHERENCE_REG, coherence);
         if (i == 0)
-            p2p_setup(&devs[dev_id_2[i]], 1, num_multicast_2, 0, NULL, 0);
+            p2p_setup(&devs[dev_id_2[i]], 1, num_multicast_2, 0, NULL);
         else
-            p2p_setup(&devs[dev_id_2[i]], 0, 0, 1, &devs[dev_id_2[0]], 0);
+            p2p_setup(&devs[dev_id_2[i]], 0, 0, 1, &devs[dev_id_2[0]]);
 
         iowrite32(&devs[dev_id_2[i]], PT_ADDRESS_REG, (unsigned long) ptable);
         iowrite32(&devs[dev_id_2[i]], PT_NCHUNK_REG, nchunk);
@@ -326,17 +324,17 @@ for (int it_0 = 2; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
         iowrite32(&devs[dev_id[i]], CMD_REG, CMD_MASK_START);
     }
     
-    printf(" Debug checkpoint 1\n");
+//    printf(" Debug checkpoint 1\n");
 
     unsigned done = 0;
 
     while (!done) {
         done = STATUS_MASK_DONE;
-        printf("  Debug checkpoint 2\n");
+//        printf("  Debug checkpoint 2\n");
         for (int i = 0; i < num_multicast_0 + num_multicast_1 + num_multicast_2 + 1 + 1 + 1; i++){
             done &= (ioread32(&devs[i], STATUS_REG) & STATUS_MASK_DONE);
         }
-        printf("  Debug checkpoint 3\n");
+//        printf("  Debug checkpoint 3\n");
     }
 
 //    end = get_counter();

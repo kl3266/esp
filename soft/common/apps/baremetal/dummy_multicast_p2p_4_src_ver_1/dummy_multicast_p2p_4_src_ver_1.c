@@ -150,18 +150,16 @@ static void clear_buf(token_t *mem)
             mem[i + j * TOKENS] = (mask | (token_t) (999999999));
 }
 
-void p2p_setup(struct esp_device* dev, int p2p_store, int mcast_ndests, int p2p_load, struct esp_device* p2p_src, int mcast_nsrcs){
+void p2p_setup(struct esp_device* dev, int p2p_store, int mcast_ndests, int p2p_load, struct esp_device* p2p_src){
     esp_p2p_reset(dev);
     if (p2p_store) {
         esp_p2p_enable_dst(dev);
         esp_p2p_set_mcast_ndests(dev, mcast_ndests);
-        esp_p2p_set_mcast_nsrcs(dev, mcast_nsrcs);
     }
     if (p2p_load) {
         esp_p2p_enable_src(dev);
         esp_p2p_set_y(dev, 0, esp_get_y(p2p_src));
         esp_p2p_set_x(dev, 0, esp_get_x(p2p_src));
-        esp_p2p_set_mcast_nsrcs(dev, mcast_nsrcs);
     }
 }
 
@@ -287,9 +285,9 @@ for (int it_0 = 0; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
         iowrite32(&devs[dev_id_0[i]], SELECT_REG, ioread32(&devs[dev_id_0[i]], DEVID_REG));
         iowrite32(&devs[dev_id_0[i]], COHERENCE_REG, coherence);
         if (i == 0)
-            p2p_setup(&devs[dev_id_0[i]], 1, num_multicast_0, 0, NULL, 1);
+            p2p_setup(&devs[dev_id_0[i]], 1, num_multicast_0, 0, NULL);
         else
-            p2p_setup(&devs[dev_id_0[i]], 0, 0, 1, &devs[dev_id_0[0]], 0);
+            p2p_setup(&devs[dev_id_0[i]], 0, 0, 1, &devs[dev_id_0[0]]);
 
         iowrite32(&devs[dev_id_0[i]], PT_ADDRESS_REG, (unsigned long) ptable);
         iowrite32(&devs[dev_id_0[i]], PT_NCHUNK_REG, nchunk);
@@ -306,9 +304,9 @@ for (int it_0 = 0; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
         iowrite32(&devs[dev_id_1[i]], SELECT_REG, ioread32(&devs[dev_id_1[i]], DEVID_REG));
         iowrite32(&devs[dev_id_1[i]], COHERENCE_REG, coherence);
         if (i == 0)
-            p2p_setup(&devs[dev_id_1[i]], 1, num_multicast_1, 0, NULL, 1);
+            p2p_setup(&devs[dev_id_1[i]], 1, num_multicast_1, 0, NULL);
         else
-            p2p_setup(&devs[dev_id_1[i]], 0, 0, 1, &devs[dev_id_1[0]], 0);
+            p2p_setup(&devs[dev_id_1[i]], 0, 0, 1, &devs[dev_id_1[0]]);
 
         iowrite32(&devs[dev_id_1[i]], PT_ADDRESS_REG, (unsigned long) ptable);
         iowrite32(&devs[dev_id_1[i]], PT_NCHUNK_REG, nchunk);
@@ -325,9 +323,9 @@ for (int it_0 = 0; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
         iowrite32(&devs[dev_id_2[i]], SELECT_REG, ioread32(&devs[dev_id_2[i]], DEVID_REG));
         iowrite32(&devs[dev_id_2[i]], COHERENCE_REG, coherence);
         if (i == 0)
-            p2p_setup(&devs[dev_id_2[i]], 1, num_multicast_2, 0, NULL, 1);
+            p2p_setup(&devs[dev_id_2[i]], 1, num_multicast_2, 0, NULL);
         else
-            p2p_setup(&devs[dev_id_2[i]], 0, 0, 1, &devs[dev_id_2[0]], 0);
+            p2p_setup(&devs[dev_id_2[i]], 0, 0, 1, &devs[dev_id_2[0]]);
 
         iowrite32(&devs[dev_id_2[i]], PT_ADDRESS_REG, (unsigned long) ptable);
         iowrite32(&devs[dev_id_2[i]], PT_NCHUNK_REG, nchunk);
@@ -344,9 +342,9 @@ for (int it_0 = 0; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
         iowrite32(&devs[dev_id_3[i]], SELECT_REG, ioread32(&devs[dev_id_3[i]], DEVID_REG));
         iowrite32(&devs[dev_id_3[i]], COHERENCE_REG, coherence);
         if (i == 0)
-            p2p_setup(&devs[dev_id_3[i]], 1, num_multicast_3, 0, NULL, 1);
+            p2p_setup(&devs[dev_id_3[i]], 1, num_multicast_3, 0, NULL);
         else
-            p2p_setup(&devs[dev_id_3[i]], 0, 0, 1, &devs[dev_id_3[0]], 0);
+            p2p_setup(&devs[dev_id_3[i]], 0, 0, 1, &devs[dev_id_3[0]]);
 
         iowrite32(&devs[dev_id_3[i]], PT_ADDRESS_REG, (unsigned long) ptable);
         iowrite32(&devs[dev_id_3[i]], PT_NCHUNK_REG, nchunk);

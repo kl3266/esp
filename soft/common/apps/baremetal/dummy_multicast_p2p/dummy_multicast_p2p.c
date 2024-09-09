@@ -65,18 +65,16 @@ static void init_buf(token_t *mem)
             mem[i + j * TOKENS] = (mask | (token_t) (i + j * TOKENS));
 }
 
-void p2p_setup(struct esp_device* dev, int p2p_store, int mcast_ndests, int p2p_load, struct esp_device* p2p_src, int mcast_nsrcs){
+void p2p_setup(struct esp_device* dev, int p2p_store, int mcast_ndests, int p2p_load, struct esp_device* p2p_src){
     esp_p2p_reset(dev);
     if (p2p_store) {
         esp_p2p_enable_dst(dev);
         esp_p2p_set_mcast_ndests(dev, mcast_ndests);
-        esp_p2p_set_mcast_nsrcs(dev, mcast_nsrcs);
     }
     if (p2p_load) {
         esp_p2p_enable_src(dev);
         esp_p2p_set_y(dev, 0, esp_get_y(p2p_src));
         esp_p2p_set_x(dev, 0, esp_get_x(p2p_src));
-        esp_p2p_set_mcast_nsrcs(dev, mcast_nsrcs);
     }
 }
 
@@ -143,7 +141,7 @@ for (int source_dev_id = 0; source_dev_id < num_multicast + 1; source_dev_id++) 
     // Allocate memory (will be contigous anyway in baremetal)
     mem = aligned_malloc(dummy_buf_size);
 //    printf("\n  memory buffer base-address = %p\n", mem);
-    coherence = ACC_COH_RECALL;
+    coherence = ACC_COH_NONE;
 
     // Initialize input: write floating point hex values (simpler to debug)
     init_buf(&mem[source_dev_id * BATCH * TOKENS]);
@@ -160,9 +158,9 @@ for (int source_dev_id = 0; source_dev_id < num_multicast + 1; source_dev_id++) 
         iowrite32(&devs[i], SELECT_REG, ioread32(&devs[i], DEVID_REG));
         iowrite32(&devs[i], COHERENCE_REG, coherence);
         if (i == source_dev_id)
-            p2p_setup(&devs[i], 1, num_multicast, 0, NULL, 1);
+            p2p_setup(&devs[i], 1, num_multicast, 0, NULL);
         else
-            p2p_setup(&devs[i], 0, 0, 1, &devs[source_dev_id], 0);
+            p2p_setup(&devs[i], 0, 0, 1, &devs[source_dev_id]);
 
         iowrite32(&devs[i], PT_ADDRESS_REG, (unsigned long) ptable);
         iowrite32(&devs[i], PT_NCHUNK_REG, nchunk);
