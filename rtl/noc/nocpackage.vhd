@@ -889,8 +889,8 @@ function create_header_mcast (
     end loop;
 
     for i in 0 to MAX_MCAST_DESTS - 1 loop
-      header(flit_sz - PREAMBLE_WIDTH - (1 + MAX_MCAST_DESTS) * 2 * YX_WIDTH - MSG_TYPE_WIDTH - MAX_MCAST_DESTS - RESERVED_OFFSET_MCAST + i) := '1';
       if i <= mcast_ndests then
+        header(flit_sz - PREAMBLE_WIDTH - (1 + MAX_MCAST_DESTS) * 2 * YX_WIDTH - MSG_TYPE_WIDTH - MAX_MCAST_DESTS - RESERVED_OFFSET_MCAST + i) := '1';
         if local_x < remote_x(i) then
           go_right := "01000";
         else
@@ -902,9 +902,9 @@ function create_header_mcast (
           go_left := "11011";
         end if;
         if local_y < remote_y(i) then
-          routing := "01110";
+          routing := "01110" and go_left and go_right;
         else
-          routing := "01101";
+          routing := "01101" and go_left and go_right;
         end if;
         if local_y = remote_y(i) and local_x = remote_x(i) then
           routing := "10000";
