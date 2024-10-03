@@ -27,8 +27,8 @@ typedef u64 token_t;
 #define BATCH_REG 0x44
 
 // User defined registers
-#define TOKENS 512
-#define BATCH 256
+#define TOKENS 16
+#define BATCH 8192
 #define mask 0x0LL
 
 // Control the number of consumers
@@ -176,8 +176,8 @@ int main(int argc, char * argv[])
     // Allocate memory (will be contigous anyway in baremetal)
     mem = aligned_malloc(dummy_buf_size);
     //printf("\n  memory buffer base-address = %p\n", mem);
-//    coherence = ACC_COH_RECALL;
-    coherence = ACC_COH_NONE;
+    coherence = ACC_COH_RECALL;
+//    coherence = ACC_COH_NONE;
 
     //Alocate and populate page table
     ptable = aligned_malloc(nchunk * sizeof(unsigned *));
@@ -271,11 +271,11 @@ for (int it_0 = 0; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
 
     while (!done) {
         done = STATUS_MASK_DONE;
-        printf("  Debug checkpoint 2\n");
+//        printf("  Debug checkpoint 2\n");
         for (int i = 0; i < num_multicast_0 + num_multicast_1 + 1 + 1; i++){
             done &= (ioread32(&devs[i], STATUS_REG) & STATUS_MASK_DONE);
         }
-        printf("  Debug checkpoint 3\n");
+//        printf("  Debug checkpoint 3\n");
     }
 
     end = get_counter();

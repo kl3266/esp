@@ -32,11 +32,11 @@ typedef u64 token_t;
 #define mask 0x0LL
 
 // Control the number of consumers
-#define NUM_MULTICAST_0 1
-#define NUM_MULTICAST_1 14
+#define NUM_MULTICAST_0 6
+#define NUM_MULTICAST_1 9
 
 // MCAST number of iterations = 8 * 9 (num_dest + 1)*(num_dest + 1)
-#define IT 30
+#define IT 54
 
 /* Size of the contiguous chunks for scatter/gather */
 #define CHUNK_SHIFT 20
@@ -190,8 +190,8 @@ for (int it_0 = 0; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
     for (int it_1 = 0; it_1 < NUM_MULTICAST_1 + 1; it_1++) {
 
     // Indexes
-    int dev_id_0[NUM_MULTICAST_0 + 1] = {1, 13};
-    int dev_id_1[NUM_MULTICAST_1 + 1] = {0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16};
+    int dev_id_0[NUM_MULTICAST_0 + 1] = {1, 2, 5, 6, 9, 10, 14};
+    int dev_id_1[NUM_MULTICAST_1 + 1] = {0, 3, 4, 7, 8, 11, 12, 13, 15, 16};
     int dev_id[NUM_MULTICAST_0 + NUM_MULTICAST_1 + 1 + 1] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
     // Swap indexes
@@ -271,11 +271,11 @@ for (int it_0 = 0; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
 
     while (!done) {
         done = STATUS_MASK_DONE;
-        printf("  Debug checkpoint 2\n");
+//        printf("  Debug checkpoint 2\n");
         for (int i = 0; i < num_multicast_0 + num_multicast_1 + 1 + 1; i++){
             done &= (ioread32(&devs[i], STATUS_REG) & STATUS_MASK_DONE);
         }
-        printf("  Debug checkpoint 3\n");
+//        printf("  Debug checkpoint 3\n");
     }
 
     end = get_counter();

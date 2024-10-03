@@ -27,8 +27,8 @@ typedef u64 token_t;
 #define BATCH_REG 0x44
 
 // User defined registers
-#define TOKENS 12
-#define BATCH 1024
+#define TOKENS 16
+#define BATCH 2048
 #define mask 0x0LL
 
 // Control the number of consumers
@@ -203,8 +203,8 @@ int main(int argc, char * argv[])
     // Allocate memory (will be contigous anyway in baremetal)
     mem = aligned_malloc(dummy_buf_size);
     //printf("\n  memory buffer base-address = %p\n", mem);
-    coherence = ACC_COH_NONE;
-//    coherence = ACC_COH_RECALL;
+//    coherence = ACC_COH_NONE;
+    coherence = ACC_COH_RECALL;
 
     //Alocate and populate page table
     ptable = aligned_malloc(nchunk * sizeof(unsigned *));
@@ -213,15 +213,16 @@ int main(int argc, char * argv[])
     //printf("  ptable = %p\n", ptable);
     //printf("  nchunk = %lu\n\n", nchunk);
 
-for (int it_0 = 2; it_0 < 3; it_0++) {
-    for (int it_1 = 5; it_1 < 6; it_1++) {
-        for (int it_2 = 4; it_2 < 5; it_2++) {
+for (int it_0 = 2; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
+    for (int it_1 = 4; it_1 < NUM_MULTICAST_1 + 1; it_1++) {
+        for (int it_2 = 4; it_2 < NUM_MULTICAST_2 + 1; it_2++) {
 //if ((it_0 == 3 && it_1 == 4 && it_2 == 4) || (it_0 == 3 && it_1 == 4 && it_2 == 5) || (it_0 == 3 && it_1 == 5 && it_2 == 5)) {
 //    continue;
 //}
-//if ((it_0 == 2 && it_1 == 4 && it_2 == 4) && (it_0 == 2 && it_1 == 5 && it_2 == 4)){
+//if ((it_0 == 2 && it_1 == 4 && it_2 == 4) || (it_0 == 2 && it_1 == 5 && it_2 == 4) || (it_0 == 3 && it_1 == 5 && it_2 == 6)){
 //continue;
 //}
+
     // Indexes
     int dev_id_0[NUM_MULTICAST_0 + 1] = {0, 4, 9, 14};
     int dev_id_1[NUM_MULTICAST_1 + 1] = {1, 5, 7, 10, 12, 15};

@@ -133,10 +133,9 @@ module lookahead_router_multicast
   logic [4:0][4:0] final_routing_request;  // ri lint_check_waive NOT_READ
   logic [4:0][4:0] next_hop_routing;
 
-  //forking arbiter logic
-  logic [4:0][4:0] case_a, case_b, case_c, non_forking_req, forking_req_a, new_final_routing_request, granted_req;
-  logic [4:0][2:0] routing_sum_horizontal_a, routing_sum_vertical_a, routing_sum_vertical_b;
-  logic [4:0] forking_input_a, forking_input_c, conflict_output_a, conflict_output_b, grant_fork, grant_fork_arbiter;
+  logic [4:0][4:0] non_forking_req, forking_req1, forking_req2, forking_req3, conflict_req1, conflict_req2, new_final_routing_request, granted_req;
+  logic [4:0][2:0] routing_sum_horizontal, routing_sum_vertical;
+  logic [4:0] forking_input1, forking_input2, conflict_output, grant_fork, grant_fork_arbiter;
   logic grant_valid_fork;
 
   logic [4:0][3:0] transp_final_routing_request;
@@ -261,48 +260,53 @@ module lookahead_router_multicast
                                             saved_routing_request[g_i];
 
       // Forking Protocol
-      // case_a removes conflicting existing and new requests at each output port
+      assign routing_sum_horizontal[g_i] = final_routing_request[g_i][0] + final_routing_request[g_i][1] + final_routing_request[g_i][2] + final_routing_request[g_i][3] + final_routing_request[g_i][4];
+      assign forking_input1[g_i] = routing_sum_horizontal[g_i][2] | routing_sum_horizontal[g_i][1];
+      assign forking_req1[g_i] = final_routing_request[g_i] & {5{forking_input1[g_i]}};
+      assign non_forking_req[g_i] = final_routing_request[g_i] & {5{~forking_input1[g_i]}};
+
       always_comb begin
-        case_a[g_i] = final_routing_request[g_i];
+        conflict_req1[g_i] = '0;
         for (int g_j = 0; g_j < 5; g_j++) begin
-          if ((noc::int2noc_port(g_i) != input_direction[g_j]) && forwarding_in_progress[g_j]) begin
-            case_a[g_i] &= {5{~case_a[g_i][g_j]}};
+          if ((noc::int2noc_port(g_i) != input_direction[g_j]) && forwarding_in_progress[g_j] && forking_req1[g_i][g_j]) begin
+            conflict_req1[g_i] |= forking_req1[g_i];
           end
         end
+        forking_req2[g_i] = forking_req1[g_i] & ~conflict_req1[g_i];
       end
 
-      assign routing_sum_horizontal_a[g_i] = case_a[g_i][0] + case_a[g_i][1] + case_a[g_i][2] + case_a[g_i][3] + case_a[g_i][4];
-      assign forking_input_a[g_i] = routing_sum_horizontal_a[g_i][2] | routing_sum_horizontal_a[g_i][1];
-      assign forking_req_a[g_i] = case_a[g_i] & {5{forking_input_a[g_i]}};
-      assign non_forking_req[g_i] = case_a[g_i] & {5{~forking_input_a[g_i]}};
+//      assign forking_req2[g_i] = forking_req1[g_i] & ~conflict_req1[g_i];
 
-      // case_b has fork with fork and non-fork conflict removed
       always_comb begin
-        case_b[g_i] = forking_req_a[g_i];
+        conflict_req2[g_i] = '0;
+        forking_input2[g_i] = '0;
         for (int g_j = 0; g_j < 5; g_j++) begin
-          if (conflict_output_a[g_j] && non_forking_req[g_i][g_j]) begin
-            // delete all forks containing 1 in that column
-            case_b[g_i] &= {5{~case_b[g_i][g_j]}};
+          if (conflict_output[g_j] && forking_req2[g_i][g_j]) begin
+            conflict_req2[g_i] |= forking_req2[g_i];
+            forking_input2[g_i] |= 1'b1;
           end
         end
+        forking_req3[g_i] = forking_req2[g_i] & ~conflict_req2[g_i];
       end
 
-      // case_c removes simultaneous new forks and keeps only good forks 
-      always_comb begin
-        case_c[g_i] = case_b[g_i];
-        forking_input_c[g_i] = '0;
-        for (int g_j = 0; g_j < 5; g_j++) begin
-          if (conflict_output_b[g_j]) begin
-            case_c[g_i] &= {5{~case_c[g_i][g_j]}};
-            forking_input_c[g_i] |= case_b[g_i][g_j];
-          end
-        end
-      end
+//      assign forking_req3[g_i] = forking_req2[g_i] & ~conflict_req2[g_i];
 
       assign granted_req[g_i] = {5{grant_fork_arbiter[g_i]}} & final_routing_request[g_i];
-      assign new_final_routing_request[g_i] = case_c[g_i] | granted_req[g_i] | non_forking_req[g_i];
+      assign new_final_routing_request[g_i] = forking_req3[g_i] | granted_req[g_i] | non_forking_req[g_i];
 
       assign forwarding_tail_input[g_i] = fifo_head[g_i].header.preamble.tail & ~in_unvalid_flit[g_i];	// is there a way to match backpressure to this?
+//      assign forwarding_head_input[g_i] = in_valid_head[g_i];	//likewise, backpressure match?
+      
+//      always_ff @(posedge clk) begin
+//        if (rst) begin
+//          saved_final_routing_request[g_i] <= 1'b0;
+//        end else begin
+//          if (grant_valid_fork[g_i]) begin
+//            saved_final_routing_request[g_i] <= grant_fork_arbiter[g_i];
+//          end
+//        end
+//      end
+
       assign grant_fork_arbiter[g_i] = grant_valid_fork & grant_fork[g_i];
 
       // AckNack: stop data at input port if FIFO is full
@@ -324,9 +328,10 @@ module lookahead_router_multicast
       assign in_valid_head[g_i] = 1'b0;
       assign granted_req[g_i] = '0;
       assign new_final_routing_request[g_i] = '0;
-      assign routing_sum_horizontal_a[g_i] = '0;
-      assign forking_input_a[g_i] = '0;
-      assign forking_req_a[g_i] = '0;
+      assign routing_sum_horizontal[g_i] = '0;
+      assign forking_input1[g_i] = '0;
+      assign forking_req1[g_i] = '0;
+//      assign forwarding_head_input[g_i] = 1'b0;
       assign forwarding_tail_input[g_i] = 1'b0;
       assign grant_fork_arbiter[g_i] = 1'b0;
       assign non_forking_req[g_i] = '0;
@@ -337,7 +342,7 @@ module lookahead_router_multicast
 router_fork_arbiter fork_arbiter_i (
   .clk(clk),
   .rst(rst),
-  .request(forking_input_c),
+  .request(forking_input2),
   .forwarding_head(in_valid_head),
   .forwarding_tail(forwarding_tail_input),
   .grant(grant_fork),
@@ -361,10 +366,8 @@ router_fork_arbiter fork_arbiter_i (
 
     if (Ports[g_i]) begin : gen_output_port_enabled
 
-      assign routing_sum_vertical_a[g_i] = case_a[0][g_i] + case_a[1][g_i] + case_a[2][g_i] + case_a[3][g_i] + case_a[4][g_i];
-      assign conflict_output_a[g_i] = routing_sum_vertical_a[g_i][2] | routing_sum_vertical_a[g_i][1];
-      assign routing_sum_vertical_b[g_i] = case_b[0][g_i] + case_b[1][g_i] + case_b[2][g_i] + case_b[3][g_i] + case_b[4][g_i];
-      assign conflict_output_b[g_i] = routing_sum_vertical_b[g_i][2] | routing_sum_vertical_b[g_i][1];
+      assign routing_sum_vertical[g_i] = forking_req2[0][g_i] + forking_req2[1][g_i] + forking_req2[2][g_i] + forking_req2[3][g_i] + forking_req2[4][g_i];
+      assign conflict_output[g_i] = routing_sum_vertical[g_i][2] | routing_sum_vertical[g_i][1];
       
       for (g_j = 0; g_j < 5; g_j++) begin : gen_transpose_routing
         // transpose current routing request for easier accesss, but
@@ -656,10 +659,8 @@ router_fork_arbiter fork_arbiter_i (
       assign saved_routing_configuration[g_i] = '0;
       assign rd_fifo[g_i] = '0;
       assign backpressure_tmp[g_i] = '0;
-      assign routing_sum_vertical_a[g_i] = '0;
-      assign routing_sum_vertical_b[g_i] = '0;
-      assign conflict_output_a[g_i] = '0;
-      assign conflict_output_b[g_i] = '0;
+      assign routing_sum_vertical[g_i] = '0;
+      assign conflict_output[g_i] = '0;
       assign no_backpressure[g_i] = '1;
       assign no_backpressure_old[g_i] = '1;
       assign forwarding_tail[g_i] = '0;

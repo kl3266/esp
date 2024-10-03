@@ -27,8 +27,8 @@ typedef u64 token_t;
 #define BATCH_REG 0x44
 
 // User defined registers
-#define TOKENS 12
-#define BATCH 4
+#define TOKENS 16
+#define BATCH 8192
 #define mask 0x0LL
 
 // Control the number of consumers
@@ -106,7 +106,7 @@ for (int source_dev_id = 0; source_dev_id < num_multicast + 1; source_dev_id++) 
 //    printf("Scanning device tree...\n");
 //	ndev = probe(&devs, VENDOR_SLD, SLD_DUMMY, DEV_NAME);
 //	if (!ndev) {
-//		printf("Error: %s device not found!\n", DEV_NAME);
+//		printf("Error: %s device not found!\n", DEV_NAME);//		exit(EXIT_FAILURE);
 //		exit(EXIT_FAILURE);
 //	}
 
@@ -142,6 +142,7 @@ for (int source_dev_id = 0; source_dev_id < num_multicast + 1; source_dev_id++) 
     mem = aligned_malloc(dummy_buf_size);
 //    printf("\n  memory buffer base-address = %p\n", mem);
     coherence = ACC_COH_RECALL;
+//    coherence = ACC_COH_NONE;
 
     // Initialize input: write floating point hex values (simpler to debug)
     init_buf(&mem[source_dev_id * BATCH * TOKENS]);

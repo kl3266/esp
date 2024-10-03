@@ -27,8 +27,8 @@ typedef u64 token_t;
 #define BATCH_REG 0x44
 
 // User defined registers
-#define TOKENS 12
-#define BATCH 256
+#define TOKENS 16
+#define BATCH 1024
 #define mask 0x0LL
 
 // Control the number of consumers
@@ -208,16 +208,25 @@ int main(int argc, char * argv[])
 
     //Alocate and populate page table
     ptable = aligned_malloc(nchunk * sizeof(unsigned *));
-    for (i = 0; i < nchunk; i++)
+    for (i = 0; i < nchunk; i++) {
         ptable[i] = (unsigned *) &mem[i * (CHUNK_SIZE / sizeof(token_t))];
-    //printf("  ptable = %p\n", ptable);
-    //printf("  nchunk = %lu\n\n", nchunk);
+        printf("  ptable[i] = %p\n", ptable[i]);
+    }
+    printf("  ptable = %p\n", ptable);
+    printf("  nchunk = %lu\n\n", nchunk);
 
 for (int it_0 = 0; it_0 < NUM_MULTICAST_0 + 1; it_0++) {
     for (int it_1 = 0; it_1 < NUM_MULTICAST_1 + 1; it_1++) {
         for (int it_2 = 0; it_2 < NUM_MULTICAST_2 + 1; it_2++) {
 
-//if ((it_0 == 4 && it_1 == 4 && it_2 == 4)){
+//if ((it_0 == 0 && it_1 == 0 && it_2 == 3) || (it_0 == 2 && it_1 == 1 && it_2 == 0) || (it_0 == 1 && it_1 == 1 && it_2 == 3) || (it_0 == 2 && it_1 == 2 && it_2 == 1)){
+//continue;
+//}
+//if ((it_0 == 2 && it_1 == 2 && it_2 == 1)) {
+//continue;
+//}
+
+//if ((it_0 == 0 && it_1 ==1 && it_2 == 0) || (it_0 == 1 && it_1 == 1 && it_2 ==0)) {
 //continue;
 //}
 
