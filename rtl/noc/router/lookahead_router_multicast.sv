@@ -135,8 +135,9 @@ module lookahead_router_multicast
 
   //forking arbiter logic
   logic [4:0][4:0] case_a, case_b, case_c, non_forking_req, forking_req_a, new_final_routing_request, granted_req;
-  logic [4:0][2:0] routing_sum_horizontal_a, routing_sum_vertical_a, routing_sum_vertical_b;
-  logic [4:0] forking_input_a, forking_input_c, conflict_output_a, conflict_output_b, grant_fork, grant_fork_arbiter;
+  logic [4:0][2:0] routing_sum_horizontal_initial, routing_sum_vertical_a, routing_sum_vertical_b;
+//  logic [4:0][2:0] routing_sum_horizontal_a;
+  logic [4:0] forking_input_initial, forking_input_a, forking_input_c, conflict_output_a, conflict_output_b, grant_fork, grant_fork_arbiter;
   logic grant_valid_fork;
 
   logic [4:0][3:0] transp_final_routing_request;
@@ -260,19 +261,26 @@ module lookahead_router_multicast
       assign final_routing_request[g_i] = in_valid_head[g_i] ? fifo_head[g_i].header.routing :
                                             saved_routing_request[g_i];
 
+      assign routing_sum_horizontal_initial[g_i] = final_routing_request[g_i][0] + final_routing_request[g_i][1] + final_routing_request[g_i][2] + final_routing_request[g_i][3] + final_routing_request[g_i][4];
+      assign forking_input_initial[g_i] = routing_sum_horizontal_initial[g_i][2] | routing_sum_horizontal_initial[g_i][1];
+
       // Forking Protocol
-      // case_a removes conflicting existing and new requests at each output port
+      // case_a removes conflicting existing (both fork and non-fork) and new forking requests at each output port
       always_comb begin
         case_a[g_i] = final_routing_request[g_i];
+        forking_input_a[g_i] = forking_input_initial[g_i];
         for (int g_j = 0; g_j < 5; g_j++) begin
           if ((noc::int2noc_port(g_i) != input_direction[g_j]) && forwarding_in_progress[g_j]) begin
-            case_a[g_i] &= {5{~case_a[g_i][g_j]}};
+            case_a[g_i] &= {5{~(case_a[g_i][g_j] & forking_input_initial[g_i])}};
+            forking_input_a[g_i] &= ~(final_routing_request[g_i][g_j] & forking_input_initial[g_i]);
           end
         end
       end
 
-      assign routing_sum_horizontal_a[g_i] = case_a[g_i][0] + case_a[g_i][1] + case_a[g_i][2] + case_a[g_i][3] + case_a[g_i][4];
-      assign forking_input_a[g_i] = routing_sum_horizontal_a[g_i][2] | routing_sum_horizontal_a[g_i][1];
+//      assign routing_sum_horizontal_a[g_i] = case_a[g_i][0] + case_a[g_i][1] + case_a[g_i][2] + case_a[g_i][3] + case_a[g_i][4];
+//      assign forking_input_a[g_i] = routing_sum_horizontal_a[g_i][2] | routing_sum_horizontal_a[g_i][1];
+//      assign forking_req_a[g_i] = case_a[g_i] & {5{forking_input_a[g_i]}};
+//      assign non_forking_req[g_i] = case_a[g_i] & {5{~forking_input_a[g_i]}};
       assign forking_req_a[g_i] = case_a[g_i] & {5{forking_input_a[g_i]}};
       assign non_forking_req[g_i] = case_a[g_i] & {5{~forking_input_a[g_i]}};
 
@@ -324,7 +332,9 @@ module lookahead_router_multicast
       assign in_valid_head[g_i] = 1'b0;
       assign granted_req[g_i] = '0;
       assign new_final_routing_request[g_i] = '0;
-      assign routing_sum_horizontal_a[g_i] = '0;
+//      assign routing_sum_horizontal_a[g_i] = '0;
+      assign routing_sum_horizontal_initial[g_i] = '0;
+      assign forking_input_initial[g_i] = '0;
       assign forking_input_a[g_i] = '0;
       assign forking_req_a[g_i] = '0;
       assign forwarding_tail_input[g_i] = 1'b0;
